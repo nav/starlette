@@ -191,8 +191,8 @@ class Request(HTTPConnection):
         return self._receive
 
     async def stream(self) -> typing.AsyncGenerator[bytes, None]:
-        if hasattr(self, "_body"):
-            yield self._body
+        if "body" in self.scope:
+            yield self.scope["body"]
             yield b""
             return
 
@@ -214,12 +214,12 @@ class Request(HTTPConnection):
         yield b""
 
     async def body(self) -> bytes:
-        if not hasattr(self, "_body"):
+        if not "body" in self.scope:
             chunks = []
             async for chunk in self.stream():
                 chunks.append(chunk)
-            self._body = b"".join(chunks)
-        return self._body
+            self.scope["body"] = b"".join(chunks)
+        return self.scope["body"]
 
     async def json(self) -> typing.Any:
         if not hasattr(self, "_json"):
